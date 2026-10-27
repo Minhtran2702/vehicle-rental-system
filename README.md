@@ -1,7 +1,7 @@
 # Vehicle Rental System
 
 Nền tảng cho thuê xe trực tuyến: **Back-end** (Spring Boot) + **Web** (React) + **App** (Flutter) + **CSDL** (PostgreSQL).
-Nhóm: Trần Nhựt Minh (trưởng nhóm), Hoàng Mẫn Đạt, Dương Hiển Đạt.
+Nhóm: Trần Nhựt Minh, Hoàng Mẫn Đạt, Dương Hiển Đạt.
 
 ## Cấu trúc thư mục
 ```
