@@ -1,79 +1,57 @@
 # Vehicle Rental System
 
-Nền tảng cho thuê xe trực tuyến: **Back-end** (Spring Boot) + **Web** (React) + **App** (Flutter) + **CSDL** (PostgreSQL).
-Nhóm: Trần Nhựt Minh, Hoàng Mẫn Đạt, Dương Hiển Đạt.
+Hệ thống thuê xe gồm 3 phần: **backend** (Spring Boot), **web** (React), **mobile** (Flutter).
 
-## Cấu trúc thư mục
+## 1. Cài sẵn trên máy
+- JDK 21, Apache NetBeans (hoặc IDE mở được Maven)
+- PostgreSQL + pgAdmin
+- Node.js 18 trở lên + VS Code
+- Flutter SDK + Android Studio (có máy ảo Android)
+
+## 2. Tải code
 ```
-backend/   Spring Boot 3 + Java 21 (package theo module: auth, user, vehicle, booking, payment, review, notification, admin, ai, storage)
-web/       React + Vite + TypeScript + Tailwind        (khung do Minh dựng, xem web/README.md; mỗi người tự thêm trang)
-mobile/    Flutter                                     (khung do Minh dựng, xem mobile/README.md)
-postman/   Postman collection + environment
-docs/      Tài liệu, sơ đồ, báo cáo
-docker-compose.yml   PostgreSQL 16 chạy 1 lệnh
+git clone https://github.com/Minhtran2702/vehicle-rental-system.git
 ```
 
-## Chạy dự án trên máy
-Cần: Java 21, Maven 3.9+, Docker Desktop (cho PostgreSQL).
+## 3. Database (làm 1 lần)
+Mở pgAdmin, tạo database rỗng tên `vehicle_rental`. Bảng và dữ liệu mẫu **tự tạo** khi chạy backend.
 
-```bash
-git clone <URL-repo>
-cd vehicle-rental-system
-cp .env.example .env              # Windows: copy .env.example .env
-docker compose up -d db           # bật PostgreSQL
-cd backend
-mvn spring-boot:run               # Flyway tự tạo 21 bảng + dữ liệu tham chiếu
+Backend mặc định dùng user `vrs`, mật khẩu `vrs_password`. Có 2 cách:
+- Tạo user đó: chạy trong Query Tool
+  ```sql
+  CREATE USER vrs WITH PASSWORD 'vrs_password';
+  ALTER DATABASE vehicle_rental OWNER TO vrs;
+  ```
+- Hoặc dùng user `postgres` của bạn: tạo file `backend/application-local.yml` (Git bỏ qua file này)
+  ```yaml
+  spring:
+    datasource:
+      username: postgres
+      password: "mat-khau-cua-ban"
+  ```
+
+## 4. Chạy backend
+Mở thư mục `backend` bằng NetBeans → bấm **Run**.
+Thấy dòng `Started VehicleRentalApplication` là xong. API: http://localhost:8080/swagger-ui.html
+
+Tài khoản mẫu (mật khẩu `123456`): `admin@vrs.local`, `owner@vrs.local`, `owner2@vrs.local`, `user@vrs.local`
+
+## 5. Chạy web
 ```
-Kiểm tra: mở http://localhost:8080/api/health (phải trả `UP`) và Swagger UI http://localhost:8080/swagger-ui.html.
-
-Reset CSDL sạch: `docker compose down -v && docker compose up -d db`.
-
-## Quy ước làm việc nhóm
-- Nhánh: `main` (bản ổn định, chỉ Minh gộp) ← `develop` (gộp hằng ngày) ← `feature/<module>-<việc>` ví dụ `feature/booking-quote`.
-- **Ai làm giao diện (Web + App) của chức năng nào thì làm luôn Back-end (API) của chức năng đó.** Không tách riêng người làm FE, người làm BE.
-- Mỗi người chỉ code trong module của mình; muốn sửa module người khác thì nhắn người đó.
-- Commit: `feat: ...`, `fix: ...`, `docs: ...`, `refactor: ...` (viết tiếng Việt hoặc Anh đều được, ngắn gọn).
-- Trước khi tạo Pull Request: `git pull origin develop`, chạy được `mvn test`, chạy thử API bằng Postman.
-- Không commit: file `.env`, khoá Firebase (`*service-account.json`, `google-services.json`), thư mục `uploads/`.
-- Thay đổi CSDL: **không sửa** `V1__schema.sql`. Tạo file mới `V3__mo_ta.sql`, `V4__...` (Flyway chạy theo số thứ tự). Báo cả nhóm trước khi thêm.
-
-## Cách thêm một module mới (ví dụ `vehicle`)
+cd web
+npm install
+npm run dev
 ```
-backend/src/main/java/com/vehiclerental/vehicle/
-    controller/VehicleController.java      @RestController, đường dẫn /api/vehicles
-    service/VehicleService.java            nghiệp vụ, ném AppException khi lỗi
-    repository/VehicleRepository.java      Spring Data JPA
-    entity/Vehicle.java                    khớp bảng vehicles trong V1__schema.sql
-    dto/...                                request / response
+Mở http://localhost:5173. Mặc định chạy bằng dữ liệu giả. Muốn gọi backend thật: sửa `web/.env.development` thành `VITE_USE_MOCKS=false`.
+
+## 6. Chạy mobile
+Mở thư mục `mobile` bằng Android Studio → **Pub get** → bật máy ảo → chọn máy ảo ở thanh trên → **Run**.
+Mặc định chạy bằng dữ liệu giả. Muốn gọi backend thật:
 ```
-- Trả về luôn bọc `ApiResponse.ok(data)`; danh sách phân trang dùng `PageResponse.of(page)`.
-- Lỗi nghiệp vụ: `throw AppException.notFound("Không tìm thấy xe")` – đã có sẵn bộ bắt lỗi chung.
-
-## CSDL
-21 bảng: roles, users, refresh_tokens, user_profiles, addresses, brands, categories, vehicles, vehicle_images,
-vehicle_features, vehicle_locations, maintenance_records, coupons, bookings, booking_status_history,
-payment_methods, payments, reviews, favorites, notifications, audit_logs.
-Dữ liệu tham chiếu có sẵn (V2): 2 vai trò, 12 hãng, 8 loại xe, 5 phương thức thanh toán, 3 mã coupon.
-
-## Trạng thái khung
-| Phần | Trạng thái |
-|---|---|
-| Back-end + CSDL | Khung xong; Security đang cho phép mọi request (việc `sec_core` sẽ siết lại) |
-| Web React | Khung xong + các trang phần Minh (dữ liệu giả); Hiển và Mẫn thêm trang của mình |
-| App Flutter | Khung xong (chạy bằng dữ liệu giả, xem mobile/README.md) |
-
-## Back-end: chạy và test
-1. Mở `backend` bằng NetBeans (Open Project → Maven), đảm bảo PostgreSQL đang chạy và có database `vehicle_rental` (user `vrs`, pass `vrs_password`, hoặc tạo `backend/application-local.yml`, xem mục dưới).
-2. Run project → lần đầu Flyway tạo bảng và `DataInitializer` tạo tài khoản + xe mẫu (mật khẩu `123456`).
-3. Test bằng Postman: xem `docs/API-Minh.md` và `postman/`. Swagger: http://localhost:8080/swagger-ui.html
-
-### Cấu hình database riêng của máy bạn
-Mặc định BE kết nối `localhost:5432`, database `vehicle_rental`, user `vrs`, mật khẩu `vrs_password`.
-Nếu máy bạn dùng user/mật khẩu khác, tạo file `backend/application-local.yml` (Git đã bỏ qua file này):
-```yaml
-spring:
-  datasource:
-    username: postgres
-    password: "mat-khau-cua-ban"
+flutter run --dart-define=USE_MOCKS=false
 ```
-Cần tạo sẵn database rỗng `vehicle_rental`; lần chạy đầu Flyway tự tạo bảng và dữ liệu mẫu.
+(Máy ảo Android gọi máy tính qua `10.0.2.2`, đã cấu hình sẵn.)
+
+## Thư mục
+`backend/` · `web/` · `mobile/` · `docs/` · `postman/`
+Danh sách API: `docs/API-Minh.md`
