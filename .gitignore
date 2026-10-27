@@ -1,0 +1,25 @@
+# Java / Maven
+target/
+*.class
+*.log
+# IDE
+.idea/
+.vscode/
+*.iml
+# Env & secrets (KHÔNG đưa lên Git)
+.env
+*-service-account.json
+firebase-adminsdk*.json
+google-services.json
+GoogleService-Info.plist
+# Uploads
+backend/uploads/
+# Web
+web/node_modules/
+web/dist/
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+
+# Cấu hình riêng từng máy
+backend/application-local.yml

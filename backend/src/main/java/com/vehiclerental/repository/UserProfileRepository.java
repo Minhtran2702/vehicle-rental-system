@@ -1,0 +1,10 @@
+package com.vehiclerental.repository;
+
+import com.vehiclerental.entity.UserProfile;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
+    Optional<UserProfile> findByUserId(UUID userId);
+}

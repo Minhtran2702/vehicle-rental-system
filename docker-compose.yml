@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16
+    container_name: vrs-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-vehicle_rental}
+      POSTGRES_USER: ${DB_USER:-vrs}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-vrs_password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - vrs-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-vrs} -d ${DB_NAME:-vehicle_rental}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  vrs-pgdata:

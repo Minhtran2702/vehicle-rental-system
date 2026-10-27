@@ -1,0 +1,17 @@
+package com.vehiclerental.common;
+
+import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/** GET /api/health – kiểm tra server chạy (dùng cho Postman, Docker, demo). */
+@RestController
+@RequestMapping("/api")
+public class HealthController {
+
+    @GetMapping("/health")
+    public ApiResponse<Map<String, String>> health() {
+        return ApiResponse.ok(Map.of("status", "UP", "service", "vehicle-rental-backend"));
+    }
+}
