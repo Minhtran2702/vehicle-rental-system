@@ -22,12 +22,18 @@ class AdminHomeScreen extends StatelessWidget {
         ],
       ),
       body: ListView(
-        children: const [
-          ListTile(leading: Icon(Icons.bar_chart), title: Text('Thống kê'), subtitle: Text('Đang phát triển')),
-          ListTile(leading: Icon(Icons.people), title: Text('Người dùng'), subtitle: Text('Đang phát triển')),
-          ListTile(leading: Icon(Icons.directions_car), title: Text('Xe'), subtitle: Text('Đang phát triển')),
-          ListTile(leading: Icon(Icons.receipt_long), title: Text('Đơn đặt xe và coupon'), subtitle: Text('Đang phát triển')),
-          ListTile(leading: Icon(Icons.history), title: Text('Nhật ký audit'), subtitle: Text('Đang phát triển')),
+        children: [
+          const ListTile(leading: Icon(Icons.bar_chart), title: Text('Thống kê'), subtitle: Text('Đang phát triển')),
+          const ListTile(leading: Icon(Icons.people), title: Text('Người dùng'), subtitle: Text('Đang phát triển')),
+          const ListTile(leading: Icon(Icons.directions_car), title: Text('Xe'), subtitle: Text('Đang phát triển')),
+          const ListTile(leading: Icon(Icons.receipt_long), title: Text('Đơn đặt xe và coupon'), subtitle: Text('Đang phát triển')),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('Nhật ký audit'),
+            subtitle: const Text('Các thao tác nhạy cảm trong hệ thống'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/admin/audit'),
+          ),
         ],
       ),
     );

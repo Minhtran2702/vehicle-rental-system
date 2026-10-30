@@ -3,9 +3,18 @@ import 'package:go_router/go_router.dart';
 
 import 'auth/auth_provider.dart';
 import 'screens/account_screen.dart';
+import 'screens/address_book_screen.dart';
 import 'screens/admin_home_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/audit_logs_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/maintenance_screen.dart';
+import 'screens/my_vehicles_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/reviews_screen.dart';
+import 'screens/vehicle_detail_screen.dart';
+import 'screens/vehicle_form_screen.dart';
 import 'widgets/coming_soon.dart';
 
 /// Cấu trúc: Khách (xem được không cần đăng nhập) → Người dùng (cần đăng nhập) → Admin (cần vai trò ADMIN).
@@ -18,7 +27,7 @@ GoRouter buildRouter(AuthProvider auth) {
     redirect: (context, state) {
       if (auth.loading) return null;
       final loc = state.matchedLocation;
-      final needLogin = loc.startsWith('/bookings') || loc.startsWith('/my-vehicles');
+      final needLogin = loc.startsWith('/bookings') || loc.startsWith('/my-vehicles') || loc.startsWith('/me/');
       if (needLogin && !auth.isLoggedIn) return '/login';
       if (loc.startsWith('/admin') && !auth.isAdmin) return auth.isLoggedIn ? '/' : '/login';
       return null;
@@ -26,8 +35,19 @@ GoRouter buildRouter(AuthProvider auth) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       // --- Màn hình Khách (không bọc thanh dưới): thêm ở đây ---
+      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      // --- Màn hình Người dùng (cần đăng nhập, không bọc thanh dưới) ---
+      GoRoute(path: '/me/profile', builder: (_, __) => const ProfileScreen()),
+      GoRoute(path: '/me/addresses', builder: (_, __) => const AddressBookScreen()),
+      GoRoute(path: '/me/reviews', builder: (_, __) => const ReviewsScreen()),
+      GoRoute(path: '/me/vehicles', builder: (_, __) => const MyVehiclesScreen()),
+      GoRoute(path: '/me/vehicles/new', builder: (_, __) => const VehicleFormScreen()),
+      GoRoute(path: '/me/vehicles/:id/edit', builder: (_, s) => VehicleFormScreen(vehicleId: s.pathParameters['id'])),
+      GoRoute(path: '/me/vehicles/:id', builder: (_, s) => VehicleDetailScreen(vehicleId: s.pathParameters['id']!)),
+      GoRoute(path: '/me/vehicles/:id/maintenance', builder: (_, s) => MaintenanceScreen(vehicleId: s.pathParameters['id']!)),
 
       GoRoute(path: '/admin', builder: (_, __) => const AdminHomeScreen()),
+      GoRoute(path: '/admin/audit', builder: (_, __) => const AuditLogsScreen()),
       // --- Màn hình Admin: thêm ở đây ---
 
       StatefulShellRoute.indexedStack(

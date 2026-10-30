@@ -14,6 +14,7 @@ import '../mocks/mock_data.dart';
 class AuthProvider extends ChangeNotifier {
   AuthUser? user;
   bool loading = true;
+  final List<MockUser> _registered = [];
 
   bool get isLoggedIn => user != null;
   bool get isAdmin => user?.isAdmin ?? false;
@@ -36,7 +37,7 @@ class AuthProvider extends ChangeNotifier {
     AuthUser u;
     if (AppConfig.useMocks) {
       await delay();
-      final found = mockUsers.where((m) => m.user.email == email && m.password == password);
+      final found = [...mockUsers, ..._registered].where((m) => m.user.email == email && m.password == password);
       if (found.isEmpty) throw Exception('Sai email hoặc mật khẩu');
       u = found.first.user;
       await TokenStore.saveTokens('mock-access-${u.id}', 'mock-refresh-${u.id}');
@@ -54,6 +55,44 @@ class AuthProvider extends ChangeNotifier {
     user = u;
     notifyListeners();
     return u;
+  }
+
+  /// Đăng ký tài khoản khách thuê. Không tự đăng nhập: đăng ký xong người dùng quay lại màn đăng nhập.
+  Future<void> register({
+    required String fullName,
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
+    if (AppConfig.useMocks) {
+      await delay();
+      final exists = [...mockUsers, ..._registered]
+          .any((m) => m.user.email.toLowerCase() == email.toLowerCase());
+      if (exists) throw Exception('Email đã được sử dụng');
+      final id = 100 + _registered.length;
+      _registered.add(MockUser(AuthUser(id: id, email: email, fullName: fullName, role: 'CUSTOMER'), password));
+    } else {
+      try {
+        await ApiClient.instance.dio.post('/api/auth/register', data: {
+          'fullName': fullName,
+          'email': email,
+          'phone': phone,
+          'password': password,
+        });
+      } on DioException catch (e) {
+        throw Exception(errorMessage(e));
+      }
+    }
+  }
+
+  /// Gọi sau khi sửa hồ sơ để tên hiển thị trong app đổi theo.
+  Future<void> updateName(String fullName) async {
+    final u = user;
+    if (u == null) return;
+    final updated = AuthUser(id: u.id, email: u.email, fullName: fullName, role: u.role, avatarUrl: u.avatarUrl);
+    await TokenStore.saveUser(jsonEncode(updated.toJson()));
+    user = updated;
+    notifyListeners();
   }
 
   Future<void> logout() async {

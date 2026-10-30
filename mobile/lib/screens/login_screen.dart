@@ -6,7 +6,7 @@ import '../auth/auth_provider.dart';
 import '../core/api_client.dart';
 import '../core/theme.dart';
 
-/// Màn hình đăng nhập mẫu (chạy được với dữ liệu giả: user@vrs.local / 123456).
+/// Màn hình đăng nhập (chạy được với dữ liệu giả: user@vrs.local / 123456).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -49,15 +49,21 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
             child: Form(
               key: _form,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset('assets/images/logo.png', height: 110),
-                  const SizedBox(height: 12),
-                  const Text('Đăng nhập', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Image.asset('assets/images/logo.png', height: 84),
+                  ),
+                  const SizedBox(height: 28),
+                  const Text('Chào mừng quay lại', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  const SizedBox(height: 6),
+                  const Text('Đăng nhập để đặt xe và quản lý xe của bạn.', style: TextStyle(color: AppColors.muted)),
+                  const SizedBox(height: 24),
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
@@ -71,7 +77,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: 'Mật khẩu',
                       prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(icon: Icon(_hide ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => _hide = !_hide)),
+                      suffixIcon: IconButton(
+                        icon: Icon(_hide ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        onPressed: () => setState(() => _hide = !_hide),
+                      ),
                     ),
                     validator: (v) => (v == null || v.isEmpty) ? 'Vui lòng nhập mật khẩu' : null,
                   ),
@@ -79,18 +88,34 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 12),
                     Text(_error!, style: const TextStyle(color: AppColors.danger)),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 22),
                   ElevatedButton(
                     onPressed: _loading ? null : _submit,
                     child: _loading
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Text('Đăng nhập'),
                   ),
-                  const SizedBox(height: 10),
-                  TextButton(onPressed: () => context.go('/'), child: const Text('Xem xe không cần đăng nhập')),
                   const SizedBox(height: 8),
-                  const Text('Demo: user@vrs.local / owner@vrs.local / admin@vrs.local – mật khẩu 123456',
-                      textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.muted)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Chưa có tài khoản?', style: TextStyle(color: AppColors.muted)),
+                      TextButton(onPressed: () => context.go('/register'), child: const Text('Đăng ký')),
+                    ],
+                  ),
+                  Center(
+                    child: TextButton(onPressed: () => context.go('/'), child: const Text('Xem xe không cần đăng nhập')),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: AppColors.brandSoft, borderRadius: BorderRadius.circular(12)),
+                    child: const Text(
+                      'Tài khoản thử: user@vrs.local, owner@vrs.local, admin@vrs.local\nMật khẩu: 123456',
+                      style: TextStyle(fontSize: 12, color: AppColors.brand, height: 1.5),
+                    ),
+                  ),
                 ],
               ),
             ),
