@@ -9,7 +9,7 @@ import Spinner from '../../components/Spinner'
 import Toast from '../../components/Toast'
 import type { Address, Profile as ProfileT } from '../../types/minh'
 
-const emptyAddr: Omit<Address, 'id'> = { label: '', receiver: '', phone: '', line: '', district: '', city: '', isDefault: false }
+const emptyAddr: Omit<Address, 'id'> = { label: '', line: '', district: '', city: '', isDefault: false }
 
 export default function Profile() {
   const [p, setP] = useState<ProfileT | null>(null)
@@ -19,7 +19,10 @@ export default function Profile() {
   const [err, setErr] = useState('')
   const [edit, setEdit] = useState<(Omit<Address, 'id'> & { id?: number }) | null>(null)
 
-  useEffect(() => { getProfile().then(setP); listAddresses().then(setAddrs) }, [])
+  useEffect(() => {
+    getProfile().then(setP).catch((x) => setErr(errorMessage(x)))
+    listAddresses().then(setAddrs).catch((x) => setErr(errorMessage(x)))
+  }, [])
   if (!p) return <Spinner />
 
   const set = <K extends keyof ProfileT>(k: K, v: ProfileT[K]) => setP({ ...p, [k]: v })
@@ -34,14 +37,16 @@ export default function Profile() {
     if (!file) return
     if (!file.type.startsWith('image/')) { setErr('Chỉ chấp nhận file ảnh'); return }
     if (file.size > 5 * 1024 * 1024) { setErr('Ảnh tối đa 5MB'); return }
-    const url = URL.createObjectURL(file)
-    await changeAvatar(url); set('avatarUrl', url); setMsg('Đã đổi ảnh đại diện')
+    try {
+      const url = URL.createObjectURL(file)
+      await changeAvatar(url); set('avatarUrl', url); setMsg('Đã đổi ảnh đại diện')
+    } catch (x) { setErr(errorMessage(x)) }
   }
 
   async function submitAddr(e: FormEvent) {
     e.preventDefault()
     if (!edit) return
-    setAddrs(await saveAddress(edit)); setEdit(null); setMsg('Đã lưu địa chỉ')
+    try { setAddrs(await saveAddress(edit)); setEdit(null); setMsg('Đã lưu địa chỉ') } catch (x) { setErr(errorMessage(x)) }
   }
 
   return (
@@ -50,7 +55,9 @@ export default function Profile() {
 
       <form onSubmit={saveProfile} className="grid gap-6 rounded-xl border bg-white p-6 shadow-sm md:grid-cols-[180px_1fr]">
         <div className="flex flex-col items-center gap-3">
-          <img src={p.avatarUrl} alt="avatar" className="h-32 w-32 rounded-full object-cover ring-4 ring-brand-100" />
+          {p.avatarUrl
+            ? <img src={p.avatarUrl} alt="avatar" className="h-32 w-32 rounded-full object-cover ring-4 ring-brand-100" />
+            : <div className="flex h-32 w-32 items-center justify-center rounded-full bg-slate-200 text-4xl font-bold text-slate-500 ring-4 ring-brand-100">{p.fullName.charAt(0).toUpperCase()}</div>}
           <label className="cursor-pointer rounded-lg border px-3 py-1.5 text-sm hover:bg-slate-50">
             Đổi ảnh
             <input type="file" accept="image/*" className="hidden" onChange={onAvatar} />
@@ -82,7 +89,6 @@ export default function Profile() {
                 <span className="font-semibold">{a.label}</span>
                 {a.isDefault && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">Mặc định</span>}
               </div>
-              <p className="text-sm">{a.receiver} • {a.phone}</p>
               <p className="text-sm text-slate-500">{a.line}, {a.district}, {a.city}</p>
               <div className="mt-3 flex gap-2">
                 <Button variant="secondary" onClick={() => setEdit(a)}>Sửa</Button>
@@ -98,13 +104,9 @@ export default function Profile() {
         {edit && (
           <form onSubmit={submitAddr} className="space-y-3">
             <Input label="Tên gợi nhớ (Nhà, Công ty…)" value={edit.label} onChange={(e) => setEdit({ ...edit, label: e.target.value })} required />
-            <div className="grid grid-cols-2 gap-3">
-              <Input label="Người nhận" value={edit.receiver} onChange={(e) => setEdit({ ...edit, receiver: e.target.value })} required />
-              <Input label="Số điện thoại" value={edit.phone} onChange={(e) => setEdit({ ...edit, phone: e.target.value })} required />
-            </div>
             <Input label="Số nhà, đường" value={edit.line} onChange={(e) => setEdit({ ...edit, line: e.target.value })} required />
             <div className="grid grid-cols-2 gap-3">
-              <Input label="Quận / Huyện" value={edit.district} onChange={(e) => setEdit({ ...edit, district: e.target.value })} required />
+              <Input label="Quận / Huyện" value={edit.district} onChange={(e) => setEdit({ ...edit, district: e.target.value })} />
               <Input label="Tỉnh / Thành phố" value={edit.city} onChange={(e) => setEdit({ ...edit, city: e.target.value })} required />
             </div>
             <label className="flex items-center gap-2 text-sm">

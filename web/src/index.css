@@ -3,3 +3,13 @@
 @tailwind utilities;
 
 body { @apply bg-slate-50 text-slate-800 antialiased; }
+
+/* Trang chủ: xe chạy vào một lần khi mở trang, vạch kẻ đường trôi chậm */
+@keyframes drive-in { from { transform: translateX(-120px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes road-move { to { background-position-x: -96px; } }
+.hero-car { animation: drive-in 900ms cubic-bezier(.2,.7,.2,1) both; }
+.hero-road { background-image: repeating-linear-gradient(90deg, #f2b632 0 48px, transparent 48px 96px); background-size: 96px 100%; background-repeat: repeat-x; animation: road-move 3s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .hero-car, .hero-road { animation: none; } }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

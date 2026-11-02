@@ -50,6 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    // Báo backend huỷ refresh token (không chờ kết quả, lỗi cũng bỏ qua)
+    const refreshToken = tokenStore.refresh
+    if (!USE_MOCKS && refreshToken) api.post('/api/auth/logout', { refreshToken }).catch(() => {})
     tokenStore.clear()
     localStorage.removeItem(USER_KEY)
     setUser(null)

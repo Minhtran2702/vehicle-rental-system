@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listMyVehicles, setVehicleStatus } from '../../api/minh'
+import { errorMessage } from '../../api/client'
 import Badge from '../../components/Badge'
 import Button from '../../components/Button'
 import Spinner from '../../components/Spinner'
@@ -14,17 +15,20 @@ export default function MyVehicles() {
   const [items, setItems] = useState<OwnerVehicle[] | null>(null)
   const [filter, setFilter] = useState<'ALL' | VehicleStatus>('ALL')
   const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
 
-  useEffect(() => { listMyVehicles().then(setItems) }, [])
-  if (!items) return <Spinner />
+  useEffect(() => { listMyVehicles().then(setItems).catch((e) => setErr(errorMessage(e))) }, [])
+  if (!items) return err ? <p className="text-red-600">{err}</p> : <Spinner />
 
   const shown = filter === 'ALL' ? items : items.filter((v) => v.status === filter)
 
   async function toggle(v: OwnerVehicle) {
     const next: VehicleStatus = v.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-    const updated = await setVehicleStatus(v.id, next)
-    setItems((cur) => (cur ?? []).map((x) => (x.id === v.id ? updated : x)))
-    setMsg(next === 'ACTIVE' ? 'Đã hiện tin đăng' : 'Đã ẩn tin đăng')
+    try {
+      const updated = await setVehicleStatus(v.id, next)
+      setItems((cur) => (cur ?? []).map((x) => (x.id === v.id ? { ...x, status: updated.status } : x)))
+      setMsg(next === 'ACTIVE' ? 'Đã hiện tin đăng' : 'Đã ẩn tin đăng')
+    } catch (e) { setErr(errorMessage(e)) }
   }
 
   return (
@@ -51,7 +55,9 @@ export default function MyVehicles() {
           const cover = v.images.find((i) => i.isPrimary) ?? v.images[0]
           return (
             <div key={v.id} className="flex overflow-hidden rounded-xl border bg-white shadow-sm">
-              <img src={cover?.url} alt={v.name} className="h-auto w-40 object-cover" />
+              {cover
+                ? <img src={cover.url} alt={v.name} className="h-auto w-40 object-cover" />
+                : <div className="flex w-40 items-center justify-center bg-slate-100 text-xs text-slate-400">Chưa có ảnh</div>}
               <div className="flex flex-1 flex-col p-4">
                 <div className="mb-1 flex items-start justify-between gap-2">
                   <h3 className="font-semibold">{v.name}</h3>
@@ -72,6 +78,7 @@ export default function MyVehicles() {
         {shown.length === 0 && <p className="col-span-full rounded-xl border border-dashed bg-white p-10 text-center text-slate-500">Không có xe nào ở trạng thái này.</p>}
       </div>
       {msg && <Toast text={msg} onDone={() => setMsg('')} />}
+      {err && <Toast type="error" text={err} onDone={() => setErr('')} />}
     </div>
   )
 }

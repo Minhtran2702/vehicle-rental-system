@@ -2,6 +2,9 @@ import { createBrowserRouter } from 'react-router-dom'
 import RequireAuth from '../auth/RequireAuth'
 import AdminLayout from '../layouts/AdminLayout'
 import MainLayout from '../layouts/MainLayout'
+import BookingDetail from '../pages/dat/BookingDetail'
+import BookingNew from '../pages/dat/BookingNew'
+import Bookings from '../pages/dat/Bookings'
 import Home from '../pages/Home'
 import Login from '../pages/Login'
 import { Forbidden, NotFound } from '../pages/NotFound'
@@ -33,6 +36,9 @@ export const router = createBrowserRouter([
         { path: 'my-vehicles/new', element: <VehicleForm /> },
         { path: 'my-vehicles/:id', element: <VehicleManage /> },
         { path: 'reviews', element: <Reviews /> },
+        { path: 'bookings', element: <Bookings /> },
+        { path: 'bookings/:id', element: <BookingDetail /> },
+        { path: 'book/:vehicleId', element: <BookingNew /> },
         // --- Trang của Người dùng (cần đăng nhập): thêm ở đây ---
       ] },
       { path: 'forbidden', element: <Forbidden /> },

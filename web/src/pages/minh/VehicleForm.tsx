@@ -1,8 +1,9 @@
-import { ChangeEvent, FormEvent, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createVehicle } from '../../api/minh'
-import { errorMessage } from '../../api/client'
-import { ALL_FEATURES, BRANDS, CATEGORIES } from '../../mocks/minh'
+import { createVehicle, getCatalog } from '../../api/minh'
+import type { Catalog } from '../../api/minh'
+import { errorMessage, USE_MOCKS } from '../../api/client'
+import { ALL_FEATURES } from '../../mocks/minh'
 import Button from '../../components/Button'
 import Input from '../../components/Input'
 import { Select, Textarea } from '../../components/Field'
@@ -12,12 +13,30 @@ import type { VehicleDraft, VehicleLocation } from '../../types/minh'
 export function VehicleInfoFields({ d, set, errors }: {
   d: VehicleDraft; set: (d: VehicleDraft) => void; errors: Record<string, string>
 }) {
-  const num = (k: 'year' | 'seats' | 'pricePerDay' | 'deposit') => (e: ChangeEvent<HTMLInputElement>) => set({ ...d, [k]: Number(e.target.value) })
+  const num = (k: 'year' | 'seats' | 'pricePerDay' | 'deposit' | 'mileage') => (e: ChangeEvent<HTMLInputElement>) => set({ ...d, [k]: Number(e.target.value) })
+  // Hãng xe / loại xe lấy từ backend (khi đăng xe mới thì tự chọn mục đầu tiên)
+  const [cat, setCat] = useState<Catalog>({ brands: [], categories: [] })
+  useEffect(() => {
+    getCatalog().then((c) => {
+      setCat(c)
+      if (!d.brandId || !d.categoryId) {
+        set({ ...d, brandId: d.brandId || c.brands[0]?.id || 0, brand: d.brand || c.brands[0]?.name || '',
+          categoryId: d.categoryId || c.categories[0]?.id || 0, category: d.category || c.categories[0]?.name || '' })
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <div className="sm:col-span-2"><Input label="Tên xe (ví dụ: Toyota Vios 2022)" value={d.name} onChange={(e) => set({ ...d, name: e.target.value })} error={errors.name} /></div>
-      <Select label="Hãng xe" value={d.brand} onChange={(e) => set({ ...d, brand: e.target.value })}>{BRANDS.map((b) => <option key={b}>{b}</option>)}</Select>
-      <Select label="Loại xe" value={d.category} onChange={(e) => set({ ...d, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</Select>
+      <Select label="Hãng xe" value={d.brandId} onChange={(e) => { const b = cat.brands.find((x) => x.id === Number(e.target.value)); if (b) set({ ...d, brandId: b.id, brand: b.name }) }}>
+        {cat.brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+      </Select>
+      <Select label="Loại xe" value={d.categoryId} onChange={(e) => { const c = cat.categories.find((x) => x.id === Number(e.target.value)); if (c) set({ ...d, categoryId: c.id, category: c.name }) }}>
+        {cat.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+      </Select>
+      <div className="sm:col-span-2"><Input label="Dòng xe (ví dụ: Vios, CX-5)" value={d.model} onChange={(e) => set({ ...d, model: e.target.value })} error={errors.model} /></div>
+      <Input label="Màu xe" value={d.color} onChange={(e) => set({ ...d, color: e.target.value })} />
+      <Input label="Số km đã đi" type="number" value={d.mileage} onChange={num('mileage')} error={errors.mileage} />
       <Input label="Biển số" value={d.plate} onChange={(e) => set({ ...d, plate: e.target.value.toUpperCase() })} error={errors.plate} />
       <Input label="Năm sản xuất" type="number" value={d.year} onChange={num('year')} error={errors.year} />
       <Input label="Số chỗ ngồi" type="number" value={d.seats} onChange={num('seats')} error={errors.seats} />
@@ -36,13 +55,31 @@ export function VehicleInfoFields({ d, set, errors }: {
 
 export function validateDraft(d: VehicleDraft) {
   const e: Record<string, string> = {}
-  if (d.name.trim().length < 3) e.name = 'Vui lòng nhập tên xe'
+  if (d.model.trim().length < 1) e.model = 'Vui lòng nhập dòng xe'
+  if (d.mileage < 0) e.mileage = 'Số km không hợp lệ'
   if (!/^\d{2}[A-Z]{1,2}\d?-\d{3}\.\d{2}$/i.test(d.plate)) e.plate = 'Biển số dạng 51K-123.45'
   if (d.year < 1990 || d.year > new Date().getFullYear() + 1) e.year = 'Năm sản xuất không hợp lệ'
   if (d.seats < 1 || d.seats > 16) e.seats = 'Số chỗ từ 1 đến 16'
   if (d.pricePerDay < 50000) e.pricePerDay = 'Giá tối thiểu 50.000đ'
   if (d.deposit < 0) e.deposit = 'Tiền cọc không hợp lệ'
   return e
+}
+
+/** Thêm ảnh bằng đường dẫn (link). Dùng khi chạy API thật, vì chưa có API tải file ảnh lên. */
+export function ImageUrlAdd({ onAdd }: { onAdd: (url: string) => void }) {
+  const [url, setUrl] = useState('')
+  function add() {
+    const u = url.trim()
+    if (!/^https?:\/\/\S+$/i.test(u)) return
+    onAdd(u); setUrl('')
+  }
+  return (
+    <div className="flex gap-2">
+      <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Dán link ảnh (https://...)"
+        className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      <Button type="button" variant="secondary" onClick={add}>Thêm</Button>
+    </div>
+  )
 }
 
 export function FeaturePicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
@@ -64,13 +101,14 @@ export function LocationFields({ loc, set }: { loc: VehicleLocation; set: (l: Ve
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <div className="space-y-3">
-        <Input label="Địa chỉ nhận xe" value={loc.address} onChange={(e) => set({ ...loc, address: e.target.value })} />
-        <Input label="Tỉnh / Thành phố" value={loc.city} onChange={(e) => set({ ...loc, city: e.target.value })} />
+        {USE_MOCKS && <Input label="Địa chỉ nhận xe" value={loc.address} onChange={(e) => set({ ...loc, address: e.target.value })} />}
+        {USE_MOCKS && <Input label="Tỉnh / Thành phố" value={loc.city} onChange={(e) => set({ ...loc, city: e.target.value })} />}
         <div className="grid grid-cols-2 gap-3">
           <Input label="Vĩ độ" type="number" step="0.0001" value={loc.lat} onChange={(e) => set({ ...loc, lat: Number(e.target.value) })} />
           <Input label="Kinh độ" type="number" step="0.0001" value={loc.lng} onChange={(e) => set({ ...loc, lng: Number(e.target.value) })} />
         </div>
-        <Textarea label="Ghi chú nhận / trả xe" value={loc.pickupNote} onChange={(e) => set({ ...loc, pickupNote: e.target.value })} />
+        {USE_MOCKS && <Textarea label="Ghi chú nhận / trả xe" value={loc.pickupNote} onChange={(e) => set({ ...loc, pickupNote: e.target.value })} />}
+        {!USE_MOCKS && <p className="text-xs text-slate-500">Hệ thống hiện lưu toạ độ (vĩ độ, kinh độ) của chỗ nhận xe.</p>}
       </div>
       <iframe title="Bản đồ" className="h-72 w-full rounded-xl border"
         src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${loc.lat},${loc.lng}`} />
@@ -79,7 +117,7 @@ export function LocationFields({ loc, set }: { loc: VehicleLocation; set: (l: Ve
 }
 
 export const emptyDraft: VehicleDraft = {
-  name: '', brand: 'Toyota', category: 'Sedan', plate: '', year: 2022, seats: 5, transmission: 'AUTO', fuel: 'GASOLINE',
+  name: '', model: '', color: '', mileage: 0, brand: '', brandId: 0, category: '', categoryId: 0, plate: '', year: 2022, seats: 5, transmission: 'AUTO', fuel: 'GASOLINE',
   pricePerDay: 700000, deposit: 3000000, description: '', status: 'ACTIVE',
 }
 export const emptyLoc: VehicleLocation = { address: '', city: 'TP. Hồ Chí Minh', lat: 10.7769, lng: 106.7009, pickupNote: '' }
@@ -107,13 +145,13 @@ export default function VehicleForm() {
   function next() {
     setError('')
     if (step === 0) { const e = validateDraft(d); setErrors(e); if (Object.keys(e).length) return }
-    if (step === 1 && images.length < 1) { setError('Cần ít nhất 1 ảnh xe'); return }
+    if (USE_MOCKS && step === 1 && images.length < 1) { setError('Cần ít nhất 1 ảnh xe'); return }
     setStep(step + 1)
   }
 
   async function submit(ev: FormEvent) {
     ev.preventDefault()
-    if (!loc.address.trim()) { setError('Vui lòng nhập địa chỉ nhận xe'); return }
+    if (USE_MOCKS && !loc.address.trim()) { setError('Vui lòng nhập địa chỉ nhận xe'); return }
     setLoading(true); setError('')
     try { const v = await createVehicle(d, images, features, loc); navigate(`/my-vehicles/${v.id}`) }
     catch (x) { setError(errorMessage(x)) } finally { setLoading(false) }
@@ -136,7 +174,7 @@ export default function VehicleForm() {
         {step === 0 && <VehicleInfoFields d={d} set={setD} errors={errors} />}
         {step === 1 && (
           <div>
-            <p className="mb-3 text-sm text-slate-500">Tải tối đa 10 ảnh (JPG/PNG ≤ 5MB). Ảnh đầu tiên là ảnh bìa.</p>
+            <p className="mb-3 text-sm text-slate-500">{USE_MOCKS ? 'Tải tối đa 10 ảnh (JPG/PNG ≤ 5MB). Ảnh đầu tiên là ảnh bìa.' : 'Tối đa 10 ảnh, dán link ảnh (chưa có tải file lên). Có thể bỏ qua, thêm ảnh sau. Ảnh đầu tiên là ảnh bìa.'}</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {images.map((u, i) => (
                 <div key={u} className="relative">
@@ -145,13 +183,16 @@ export default function VehicleForm() {
                   <button type="button" onClick={() => setImages(images.filter((x) => x !== u))} className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white">✕</button>
                 </div>
               ))}
-              {images.length < 10 && (
+              {USE_MOCKS && images.length < 10 && (
                 <label className="flex h-28 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed text-sm text-slate-500 hover:bg-slate-50">
                   <span className="text-2xl">＋</span>Thêm ảnh
                   <input type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
                 </label>
               )}
             </div>
+            {!USE_MOCKS && images.length < 10 && (
+              <div className="mt-3"><ImageUrlAdd onAdd={(u) => setImages((cur) => [...cur, u].slice(0, 10))} /></div>
+            )}
           </div>
         )}
         {step === 2 && (<div><p className="mb-3 text-sm text-slate-500">Chọn các tiện ích xe có sẵn.</p><FeaturePicker value={features} onChange={setFeatures} /></div>)}

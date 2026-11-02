@@ -17,7 +17,7 @@ export interface PageResponse<T> {
 export type Role = 'CUSTOMER' | 'ADMIN'
 
 export interface AuthUser {
-  id: number
+  id: string
   email: string
   fullName: string
   role: Role

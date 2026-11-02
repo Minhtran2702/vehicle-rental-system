@@ -1,4 +1,4 @@
-import type { Address, AuditLog, MyReview, OwnerVehicle, PendingReview, Profile } from '../types/minh'
+import type { Address, AuditLog, MyReview, PendingReview, Profile, SeedVehicle } from '../types/minh'
 
 const img = (n: number) => `https://picsum.photos/seed/own${n}/640/400`
 
@@ -21,13 +21,13 @@ export const seedProfile: Profile = {
 }
 
 export const seedAddresses: Address[] = [
-  { id: 1, label: 'Nhà', receiver: 'Trần Nhựt Minh', phone: '0901234567', line: '12 Nguyễn Văn Linh', district: 'Quận 7', city: 'TP. Hồ Chí Minh', isDefault: true },
-  { id: 2, label: 'Công ty', receiver: 'Trần Nhựt Minh', phone: '0901234567', line: '45 Lê Lợi', district: 'Quận 1', city: 'TP. Hồ Chí Minh', isDefault: false },
+  { id: 1, label: 'Nhà', line: '12 Nguyễn Văn Linh', district: 'Quận 7', city: 'TP. Hồ Chí Minh', isDefault: true },
+  { id: 2, label: 'Công ty', line: '45 Lê Lợi', district: 'Quận 1', city: 'TP. Hồ Chí Minh', isDefault: false },
 ]
 
-export const seedVehicles: OwnerVehicle[] = [
+export const seedVehicles: SeedVehicle[] = [
   {
-    id: 101, name: 'Toyota Vios 2022', brand: 'Toyota', category: 'Sedan', plate: '51K-123.45', year: 2022, seats: 5,
+    id: '101', name: 'Toyota Vios 2022', brand: 'Toyota', category: 'Sedan', plate: '51K-123.45', year: 2022, seats: 5,
     transmission: 'AUTO', fuel: 'GASOLINE', pricePerDay: 700000, deposit: 3000000,
     description: 'Xe gia đình đời 2022, nội thất sạch, tiết kiệm xăng, phù hợp đi phố và đi tỉnh.',
     status: 'ACTIVE',
@@ -40,7 +40,7 @@ export const seedVehicles: OwnerVehicle[] = [
     ],
   },
   {
-    id: 102, name: 'Mazda CX-5 2021', brand: 'Mazda', category: 'SUV', plate: '51H-678.90', year: 2021, seats: 5,
+    id: '102', name: 'Mazda CX-5 2021', brand: 'Mazda', category: 'SUV', plate: '51H-678.90', year: 2021, seats: 5,
     transmission: 'AUTO', fuel: 'GASOLINE', pricePerDay: 1100000, deposit: 5000000,
     description: 'SUV rộng rãi, cửa sổ trời, ghế da, êm ái cho chuyến đi xa.',
     status: 'MAINTENANCE',
@@ -50,7 +50,7 @@ export const seedVehicles: OwnerVehicle[] = [
     maintenance: [{ id: 3, date: '2026-10-20', type: 'Bảo dưỡng 40.000 km', cost: 2300000, odometer: 40120, note: 'Đang bảo dưỡng, dự kiến xong 30/10.' }],
   },
   {
-    id: 103, name: 'Honda SH 150i', brand: 'Honda', category: 'Motorbike', plate: '59X1-234.56', year: 2023, seats: 2,
+    id: '103', name: 'Honda SH 150i', brand: 'Honda', category: 'Motorbike', plate: '59X1-234.56', year: 2023, seats: 2,
     transmission: 'AUTO', fuel: 'GASOLINE', pricePerDay: 250000, deposit: 2000000,
     description: 'Xe tay ga cao cấp, đi phố gọn nhẹ, tặng 2 nón bảo hiểm.',
     status: 'INACTIVE',
