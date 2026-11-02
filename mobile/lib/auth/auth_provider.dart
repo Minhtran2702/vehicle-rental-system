@@ -57,6 +57,22 @@ class AuthProvider extends ChangeNotifier {
     return u;
   }
 
+  /// Hỏi trước xem email / số điện thoại đã có người dùng chưa. Trùng thì ném lỗi kèm câu thông báo.
+  Future<void> checkAvailable({required String email, required String phone}) async {
+    if (AppConfig.useMocks) {
+      await delay();
+      final exists = [...mockUsers, ..._registered]
+          .any((m) => m.user.email.toLowerCase() == email.toLowerCase());
+      if (exists) throw Exception('Email đã được sử dụng');
+      return;
+    }
+    try {
+      await ApiClient.instance.dio.get('/api/auth/check', queryParameters: {'email': email, 'phone': phone});
+    } on DioException catch (e) {
+      throw Exception(errorMessage(e));
+    }
+  }
+
   /// Đăng ký tài khoản khách thuê. Không tự đăng nhập: đăng ký xong người dùng quay lại màn đăng nhập.
   Future<void> register({
     required String fullName,
@@ -69,7 +85,7 @@ class AuthProvider extends ChangeNotifier {
       final exists = [...mockUsers, ..._registered]
           .any((m) => m.user.email.toLowerCase() == email.toLowerCase());
       if (exists) throw Exception('Email đã được sử dụng');
-      final id = 100 + _registered.length;
+      final id = '${100 + _registered.length}';
       _registered.add(MockUser(AuthUser(id: id, email: email, fullName: fullName, role: 'CUSTOMER'), password));
     } else {
       try {

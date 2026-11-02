@@ -112,6 +112,9 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
     );
   }
 
+  /// id dạng UUID rất dài: trong danh sách chỉ hiện 8 ký tự đầu, màn chi tiết vẫn hiện đủ.
+  String _shortId(String id) => id.length > 8 ? '${id.substring(0, 8)}…' : id;
+
   Widget _logCard(AuditLog l) {
     return Card(
       child: ListTile(
@@ -129,7 +132,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
           child: Text('${l.actor ?? 'Hệ thống'}\n${l.time}'),
         ),
         isThreeLine: true,
-        trailing: Text('${l.entity} #${l.entityId}', style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+        trailing: Text('${l.entity}\n#${_shortId(l.entityId)}', textAlign: TextAlign.right, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
       ),
     );
   }

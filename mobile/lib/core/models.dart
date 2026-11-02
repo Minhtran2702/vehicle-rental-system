@@ -1,6 +1,6 @@
 /// Kiểu dữ liệu dùng chung (khớp với Back-end và bản web).
 class AuthUser {
-  final int id;
+  final String id;
   final String email;
   final String fullName;
   final String role; // 'CUSTOMER' hoặc 'ADMIN'
@@ -17,7 +17,7 @@ class AuthUser {
   bool get isAdmin => role == 'ADMIN';
 
   factory AuthUser.fromJson(Map<String, dynamic> j) => AuthUser(
-        id: (j['id'] as num).toInt(),
+        id: j['id'].toString(),
         email: j['email'] as String,
         fullName: j['fullName'] as String,
         role: j['role'] as String,

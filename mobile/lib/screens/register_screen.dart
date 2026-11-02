@@ -8,6 +8,12 @@ import '../core/api_client.dart';
 import '../core/theme.dart';
 
 /// Đăng ký 2 bước: (1) nhập thông tin → (2) nhập mã OTP gửi về số điện thoại.
+/// Định dạng email: có tên miền và đuôi phổ biến (khớp với Back-end).
+final _emailRe = RegExp(
+  r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.(com|net|org|edu|gov|info|biz|io|co|me|dev|app|xyz|vn|us|uk|jp|kr|cn|fr|de|au|ca|sg|th|tw|hk|in|ru)$',
+  caseSensitive: false,
+);
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -46,11 +52,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_form.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
     try {
+      await context.read<AuthProvider>().checkAvailable(
+        email: _email.text.trim(),
+        phone: _phone.text.trim(),
+      );
+      if (!mounted) return;
       await PhoneOtp.send(_phone.text.trim());
       if (!mounted) return;
       setState(() => _step = 1);
     } catch (e) {
-      setState(() => _error = errorMessage(e));
+      final msg = errorMessage(e);
+      if (mounted) {
+        setState(() => _error = msg);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,7 +91,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng ký thành công, hãy đăng nhập')));
       context.go('/login');
     } catch (e) {
-      setState(() => _error = errorMessage(e));
+      final msg = errorMessage(e);
+      if (mounted) {
+        setState(() => _error = msg);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -108,14 +131,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _email,
             keyboardType: TextInputType.emailAddress,
             decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
-            validator: (v) => (v == null || !v.contains('@')) ? 'Email không hợp lệ' : null,
+            validator: (v) => _emailRe.hasMatch((v ?? '').trim()) ? null : 'Email không hợp lệ (ví dụ: ten@gmail.com)',
           ),
           const SizedBox(height: 14),
           TextFormField(
             controller: _phone,
             keyboardType: TextInputType.phone,
             decoration: const InputDecoration(labelText: 'Số điện thoại', prefixIcon: Icon(Icons.phone_outlined)),
-            validator: (v) => RegExp(r'^0\d{9}$').hasMatch(v?.trim() ?? '') ? null : 'Số điện thoại gồm 10 số, bắt đầu bằng 0',
+            validator: (v) => RegExp(r'^(03|05|07|08|09)\d{8}$').hasMatch(v?.trim() ?? '') ? null : 'Số điện thoại gồm 10 số',
           ),
           const SizedBox(height: 14),
           TextFormField(
@@ -140,10 +163,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             decoration: const InputDecoration(labelText: 'Nhập lại mật khẩu', prefixIcon: Icon(Icons.lock_outline)),
             validator: (v) => v != _password.text ? 'Mật khẩu nhập lại không khớp' : null,
           ),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!, style: const TextStyle(color: AppColors.danger)),
-          ],
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _loading ? null : _sendOtp,
