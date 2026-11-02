@@ -9,9 +9,11 @@ import com.vehiclerental.auth.dto.UserDto;
 import com.vehiclerental.common.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,6 +31,12 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<UserDto> register(@Valid @RequestBody RegisterRequest req) {
         return ApiResponse.ok("Đăng ký thành công", service.register(req));
+    }
+
+    @GetMapping("/check")
+    public ApiResponse<Void> check(@RequestParam String email, @RequestParam(required = false) String phone) {
+        service.checkAvailable(email, phone);
+        return ApiResponse.ok("Có thể đăng ký", null);
     }
 
     @PostMapping("/login")

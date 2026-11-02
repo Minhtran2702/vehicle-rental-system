@@ -5,6 +5,9 @@ import { errorMessage } from '../../api/client'
 import Button from '../../components/Button'
 import Input from '../../components/Input'
 
+// Giống quy tắc của backend (EmailRules): đuôi email phải nằm trong danh sách cho phép
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.(com|net|org|edu|gov|info|biz|io|co|me|dev|app|xyz|vn|us|uk|jp|kr|cn|fr|de|au|ca|sg|th|tw|hk|in|ru)$/i
+
 export default function Register() {
   const navigate = useNavigate()
   const [f, setF] = useState({ fullName: '', email: '', phone: '', password: '', confirm: '' })
@@ -16,8 +19,8 @@ export default function Register() {
   function validate() {
     const e: Record<string, string> = {}
     if (f.fullName.trim().length < 2) e.fullName = 'Vui lòng nhập họ tên'
-    if (!/^\S+@\S+\.\S+$/.test(f.email)) e.email = 'Email không hợp lệ'
-    if (!/^0\d{9}$/.test(f.phone)) e.phone = 'Số điện thoại gồm 10 số, bắt đầu bằng 0'
+    if (!EMAIL_RE.test(f.email)) e.email = 'Email không hợp lệ (ví dụ: ten@gmail.com)'
+    if (!/^(03|05|07|08|09)\d{8}$/.test(f.phone)) e.phone = 'Số điện thoại gồm 10 số'
     if (f.password.length < 8) e.password = 'Mật khẩu tối thiểu 8 ký tự'
     else if (!/[A-Za-z]/.test(f.password) || !/\d/.test(f.password)) e.password = 'Mật khẩu cần có cả chữ và số'
     if (f.confirm !== f.password) e.confirm = 'Mật khẩu nhập lại không khớp'

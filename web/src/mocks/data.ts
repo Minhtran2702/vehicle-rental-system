@@ -2,12 +2,13 @@ import type { AuthUser, VehicleSummary } from '../types'
 
 // Dữ liệu giả dùng chung. Mỗi người thêm dữ liệu giả của chức năng mình vào file riêng trong thư mục mocks.
 export const mockUsers: (AuthUser & { password: string })[] = [
-  { id: 1, email: 'admin@vrs.local', fullName: 'Quản trị viên', role: 'ADMIN', password: '123456' },
-  { id: 2, email: 'owner@vrs.local', fullName: 'Nguyễn Chủ Xe', role: 'CUSTOMER', password: '123456' },
-  { id: 3, email: 'user@vrs.local', fullName: 'Trần Khách Thuê', role: 'CUSTOMER', password: '123456' },
+  { id: '1', email: 'admin@vrs.local', fullName: 'Quản trị viên', role: 'ADMIN', password: '123456' },
+  { id: '2', email: 'owner@vrs.local', fullName: 'Nguyễn Chủ Xe', role: 'CUSTOMER', password: '123456' },
+  { id: '3', email: 'user@vrs.local', fullName: 'Trần Khách Thuê', role: 'CUSTOMER', password: '123456' },
 ]
 
-const img = (n: number) => `https://picsum.photos/seed/vrs${n}/640/400`
+// Chưa có ảnh xe thật: để trống thì thẻ xe tự hiện hình xe thay thế. Khi nối API sẽ là link ảnh thật.
+const img = (_n: number) => ''
 
 export const mockVehicles: VehicleSummary[] = [
   { id: 1, name: 'Toyota Vios 2022', brand: 'Toyota', category: 'Sedan', seats: 5, pricePerDay: 700000, city: 'TP. Hồ Chí Minh', rating: 4.8, reviewCount: 32, imageUrl: img(1) },

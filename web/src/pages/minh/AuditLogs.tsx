@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { listAudit } from '../../api/minh'
+import { errorMessage } from '../../api/client'
 import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
@@ -10,10 +11,11 @@ export default function AuditLogs() {
   const [q, setQ] = useState('')
   const [entity, setEntity] = useState('ALL')
   const [sel, setSel] = useState<AuditLog | null>(null)
+  const [err, setErr] = useState('')
 
-  useEffect(() => { listAudit().then(setLogs) }, [])
+  useEffect(() => { listAudit().then(setLogs).catch((e) => setErr(errorMessage(e))) }, [])
   const entities = useMemo(() => ['ALL', ...Array.from(new Set((logs ?? []).map((l) => l.entity)))], [logs])
-  if (!logs) return <Spinner />
+  if (!logs) return err ? <p className="text-red-600">{err}</p> : <Spinner />
 
   const rows = logs.filter((l) => (entity === 'ALL' || l.entity === entity) && (`${l.actor} ${l.action}`.toLowerCase().includes(q.toLowerCase())))
 
@@ -33,7 +35,7 @@ export default function AuditLogs() {
           { header: 'Thời gian', render: (l) => l.time },
           { header: 'Người thực hiện', render: (l) => l.actor },
           { header: 'Hành động', render: (l) => <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{l.action}</code> },
-          { header: 'Đối tượng', render: (l) => `${l.entity} #${l.entityId}` },
+          { header: 'Đối tượng', render: (l) => `${l.entity} #${String(l.entityId).slice(0, 8)}` },
           { header: 'IP', render: (l) => l.ip },
           { header: '', render: (l) => <button className="text-sm text-brand-600" onClick={() => setSel(l)}>Chi tiết</button> },
         ]}

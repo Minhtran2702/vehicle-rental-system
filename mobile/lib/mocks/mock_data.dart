@@ -8,9 +8,9 @@ class MockUser {
 }
 
 const mockUsers = <MockUser>[
-  MockUser(AuthUser(id: 1, email: 'admin@vrs.local', fullName: 'Quản trị viên', role: 'ADMIN'), '123456'),
-  MockUser(AuthUser(id: 2, email: 'owner@vrs.local', fullName: 'Nguyễn Chủ Xe', role: 'CUSTOMER'), '123456'),
-  MockUser(AuthUser(id: 3, email: 'user@vrs.local', fullName: 'Trần Khách Thuê', role: 'CUSTOMER'), '123456'),
+  MockUser(AuthUser(id: '1', email: 'admin@vrs.local', fullName: 'Quản trị viên', role: 'ADMIN'), '123456'),
+  MockUser(AuthUser(id: '2', email: 'owner@vrs.local', fullName: 'Nguyễn Chủ Xe', role: 'CUSTOMER'), '123456'),
+  MockUser(AuthUser(id: '3', email: 'user@vrs.local', fullName: 'Trần Khách Thuê', role: 'CUSTOMER'), '123456'),
 ];
 
 String _img(int n) => 'https://picsum.photos/seed/vrs$n/640/400';

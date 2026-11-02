@@ -3,6 +3,7 @@ package com.vehiclerental.vehicle;
 import com.vehiclerental.audit.AuditService;
 import com.vehiclerental.common.AppException;
 import com.vehiclerental.common.AuthPrincipal;
+import com.vehiclerental.common.Ownership;
 import com.vehiclerental.common.SecurityUtils;
 import com.vehiclerental.entity.Brand;
 import com.vehiclerental.entity.Category;
@@ -230,9 +231,8 @@ public class OwnerVehicleService {
     /** Lấy xe và kiểm tra quyền: chủ xe luôn được; admin chỉ được khi allowAdmin = true. */
     private Vehicle load(UUID id, boolean allowAdmin) {
         Vehicle v = vehicles.findById(id).orElseThrow(() -> AppException.notFound("Không tìm thấy xe"));
-        AuthPrincipal me = SecurityUtils.current();
-        boolean owner = v.getOwnerId().equals(me.id());
-        if (!owner && !(allowAdmin && me.isAdmin())) throw AppException.forbidden("Bạn không có quyền với xe này");
+        if (allowAdmin) Ownership.requireOwnerOrAdmin(v.getOwnerId(), "xe này");
+        else Ownership.requireOwner(v.getOwnerId(), "xe này");
         return v;
     }
 

@@ -4,7 +4,7 @@ import {
   addImage, addMaintenance, deleteMaintenance, getMyVehicle, removeImage, saveFeatures, saveLocation,
   setPrimaryImage, setVehicleStatus, updateVehicle,
 } from '../../api/minh'
-import { errorMessage } from '../../api/client'
+import { errorMessage, USE_MOCKS } from '../../api/client'
 import Badge from '../../components/Badge'
 import Button from '../../components/Button'
 import DataTable from '../../components/DataTable'
@@ -15,7 +15,7 @@ import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
 import Toast from '../../components/Toast'
 import type { MaintenanceRecord, OwnerVehicle, VehicleDraft, VehicleLocation } from '../../types/minh'
-import { FeaturePicker, LocationFields, VehicleInfoFields, validateDraft } from './VehicleForm'
+import { FeaturePicker, ImageUrlAdd, LocationFields, VehicleInfoFields, validateDraft } from './VehicleForm'
 
 const TABS = ['Thông tin', 'Hình ảnh', 'Tiện ích', 'Vị trí', 'Bảo dưỡng'] as const
 const statusLabel = { ACTIVE: 'Đang cho thuê', INACTIVE: 'Đang ẩn', MAINTENANCE: 'Đang bảo dưỡng' } as const
@@ -27,7 +27,7 @@ export default function VehicleManage() {
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
 
-  useEffect(() => { getMyVehicle(Number(id)).then(setV).catch((e) => setErr(errorMessage(e))) }, [id])
+  useEffect(() => { getMyVehicle(id!).then(setV).catch((e) => setErr(errorMessage(e))) }, [id])
   if (!v) return err ? <p className="text-red-600">{err}</p> : <Spinner />
 
   async function run(fn: () => Promise<OwnerVehicle>, ok: string) {
@@ -104,13 +104,16 @@ function ImagesTab({ v, run }: { v: OwnerVehicle; run: Run }) {
             </div>
           </div>
         ))}
-        {v.images.length < 10 && (
+        {USE_MOCKS && v.images.length < 10 && (
           <label className="flex h-40 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed text-sm text-slate-500 hover:bg-slate-50">
             <span className="text-2xl">＋</span>Thêm ảnh
             <input type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
           </label>
         )}
       </div>
+      {!USE_MOCKS && v.images.length < 10 && (
+        <div className="mt-4"><ImageUrlAdd onAdd={(u) => run(() => addImage(v.id, u), 'Đã thêm ảnh')} /></div>
+      )}
     </div>
   )
 }
@@ -139,7 +142,7 @@ const TYPES = ['Thay dầu nhớt', 'Kiểm tra phanh', 'Thay lốp', 'Bảo dư
 
 function MaintenanceTab({ v, run }: { v: OwnerVehicle; run: Run }) {
   const [open, setOpen] = useState(false)
-  const [f, setF] = useState<Omit<MaintenanceRecord, 'id'>>({ date: new Date().toISOString().slice(0, 10), type: TYPES[0], cost: 0, odometer: 0, note: '' })
+  const [f, setF] = useState<Omit<MaintenanceRecord, 'id'>>({ date: new Date().toISOString().slice(0, 10), type: TYPES[0], cost: 0, note: '' })
   const total = v.maintenance.reduce((s, m) => s + m.cost, 0)
 
   async function submit(e: FormEvent) { e.preventDefault(); await run(() => addMaintenance(v.id, f), 'Đã thêm bản ghi bảo dưỡng'); setOpen(false) }
@@ -155,7 +158,6 @@ function MaintenanceTab({ v, run }: { v: OwnerVehicle; run: Run }) {
         columns={[
           { header: 'Ngày', render: (m) => m.date },
           { header: 'Hạng mục', render: (m) => m.type },
-          { header: 'Số km', render: (m) => m.odometer.toLocaleString('vi-VN') },
           { header: 'Chi phí', render: (m) => vnd(m.cost) },
           { header: 'Ghi chú', render: (m) => m.note || '—' },
           { header: '', render: (m) => <button className="text-sm text-red-600" onClick={() => { if (confirm('Xóa bản ghi này?')) run(() => deleteMaintenance(v.id, m.id), 'Đã xóa bản ghi') }}>Xóa</button> },
@@ -168,7 +170,6 @@ function MaintenanceTab({ v, run }: { v: OwnerVehicle; run: Run }) {
             <label className="block text-sm"><span className="mb-1 block font-medium text-slate-700">Hạng mục</span>
               <select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
             </label>
-            <Input label="Số km hiện tại" type="number" value={f.odometer} onChange={(e) => setF({ ...f, odometer: Number(e.target.value) })} />
             <Input label="Chi phí (VNĐ)" type="number" value={f.cost} onChange={(e) => setF({ ...f, cost: Number(e.target.value) })} />
           </div>
           <Textarea label="Ghi chú" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />

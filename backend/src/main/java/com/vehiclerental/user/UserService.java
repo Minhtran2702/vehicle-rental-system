@@ -1,6 +1,9 @@
 package com.vehiclerental.user;
 
 import com.vehiclerental.common.AppException;
+import com.vehiclerental.common.DataMasking;
+import com.vehiclerental.common.Ownership;
+import com.vehiclerental.user.dto.UserCardDto;
 import com.vehiclerental.common.SecurityUtils;
 import com.vehiclerental.entity.Address;
 import com.vehiclerental.entity.User;
@@ -32,6 +35,19 @@ public class UserService {
     }
 
     // ---------------- Hồ sơ ----------------
+    /** Hồ sơ người khác: chính chủ và admin thấy đủ, người khác thấy bản đã che. */
+    @Transactional
+    public UserCardDto card(UUID id) {
+        User u = users.findById(id).orElseThrow(() -> AppException.notFound("Không tìm thấy người dùng"));
+        UserProfile p = profileOf(u.getId());
+        if (Ownership.canAccess(u.getId())) {
+            return new UserCardDto(u.getId(), u.getFullName(), p.getAvatarUrl(), p.getBio(), u.getPhone(), u.getEmail(),
+                    p.getIdCardNumber(), p.getDriverLicenseNumber(), false);
+        }
+        return new UserCardDto(u.getId(), u.getFullName(), p.getAvatarUrl(), p.getBio(), DataMasking.maskPhone(u.getPhone()), null,
+                DataMasking.maskId(p.getIdCardNumber()), DataMasking.maskId(p.getDriverLicenseNumber()), true);
+    }
+
     @Transactional
     public ProfileDto getProfile() {
         User u = currentUser();

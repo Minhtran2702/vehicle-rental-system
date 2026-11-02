@@ -12,8 +12,6 @@ export interface Profile {
 export interface Address {
   id: number
   label: string
-  receiver: string
-  phone: string
   line: string
   district: string
   city: string
@@ -24,14 +22,19 @@ export type VehicleStatus = 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE'
 
 export interface VehicleImage { id: number; url: string; isPrimary: boolean }
 export interface VehicleLocation { address: string; city: string; lat: number; lng: number; pickupNote: string }
-export interface MaintenanceRecord { id: number; date: string; type: string; cost: number; odometer: number; note: string }
+export interface MaintenanceRecord { id: number; date: string; type: string; cost: number; odometer?: number; note: string }
 
 export interface OwnerVehicle {
-  id: number
-  name: string
+  id: string // Back-end dùng UUID
+  name: string // tên hiển thị (hãng + dòng xe)
+  model: string // dòng xe do chủ xe nhập (Vios, CX-5...)
   brand: string
+  brandId: number
   category: string
+  categoryId: number
   plate: string
+  color: string
+  mileage: number
   year: number
   seats: number
   transmission: 'AUTO' | 'MANUAL'
@@ -46,6 +49,9 @@ export interface OwnerVehicle {
   maintenance: MaintenanceRecord[]
 }
 
+/** Dữ liệu giả ban đầu: chưa có các trường mới, hàm chuẩn hoá sẽ bổ sung. */
+export type SeedVehicle = Omit<OwnerVehicle, 'model' | 'color' | 'mileage' | 'brandId' | 'categoryId'>
+
 export type VehicleDraft = Omit<OwnerVehicle, 'id' | 'images' | 'features' | 'location' | 'maintenance'>
 
 export interface PendingReview { bookingId: number; vehicleName: string; imageUrl: string; from: string; to: string }
@@ -57,7 +63,7 @@ export interface AuditLog {
   actor: string
   action: string
   entity: string
-  entityId: number
+  entityId: string | number // backend dùng UUID (chuỗi), dữ liệu giả dùng số
   ip: string
   before: Record<string, unknown> | null
   after: Record<string, unknown> | null

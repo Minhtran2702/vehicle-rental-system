@@ -45,11 +45,24 @@ public class AuthService {
         this.audit = audit;
     }
 
+    /** Kiểm tra email và số điện thoại chưa ai dùng. Trùng thì báo lỗi 409. */
+    @Transactional(readOnly = true)
+    public void checkAvailable(String email, String phone) {
+        if (!email.trim().matches(EmailRules.REGEX)) throw AppException.badRequest("Email không hợp lệ (ví dụ: ten@gmail.com)");
+        if (users.existsByEmailIgnoreCase(email.trim())) throw AppException.conflict("Email đã được sử dụng");
+        if (phone != null && !phone.isBlank() && !phone.trim().matches(PhoneRules.REGEX)) {
+            throw AppException.badRequest("Số điện thoại gồm 10 số");
+        }
+        if (phone != null && !phone.isBlank() && users.existsByPhone(phone.trim())) {
+            throw AppException.conflict("Số điện thoại đã được sử dụng");
+        }
+    }
+
     /** Đăng ký tài khoản khách thuê (cũng đăng được xe cho thuê). Không tự đăng nhập. */
     @Transactional
     public UserDto register(RegisterRequest req) {
         String email = req.email().trim().toLowerCase();
-        if (users.existsByEmailIgnoreCase(email)) throw AppException.conflict("Email đã được sử dụng");
+        checkAvailable(email, req.phone());
         Role role = roles.findByName("CUSTOMER").orElseThrow(() -> new IllegalStateException("Thiếu vai trò CUSTOMER trong CSDL"));
         User u = new User();
         u.setRole(role);

@@ -23,3 +23,6 @@ mobile/build/
 
 # Cấu hình riêng từng máy
 backend/application-local.yml
+
+# Cau hinh rieng tung may (Vite doc de len .env.development)
+*.local
